@@ -105,12 +105,6 @@ static ssize_t uledtriggers_write(struct file *file, const char __user *buffer,
 		goto out;
 	}
 
-	if (udev->user_dev.max_brightness <= 0) {
-		ret = -EINVAL;
-		goto out;
-	}
-	udev->led_cdev.max_brightness = udev->user_dev.max_brightness;
-
 	ret = devm_led_classdev_register(uledtriggers_misc.this_device,
 					 &udev->led_cdev);
 	if (ret < 0)
