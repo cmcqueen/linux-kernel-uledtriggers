@@ -3,6 +3,8 @@ ifneq ($(KERNELRELEASE),)
 # kbuild part of makefile
 obj-m  := uledtriggers.o
 
+ccflags-y := -I$(src)/include
+
 else
 
 # normal makefile
