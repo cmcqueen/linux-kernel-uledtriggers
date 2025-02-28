@@ -19,7 +19,6 @@
 
 struct uledtriggers_user_dev {
 	char name[LED_TRIGGER_MAX_NAME_SIZE];
-	int max_brightness;
 };
 
 #endif /* _UAPI__ULEDTRIGGERS_H_ */
