@@ -30,15 +30,12 @@ enum uledtriggers_trig_state {
 
 struct uledtriggers_device {
 	struct uledtriggers_user_dev	user_dev;
-	struct led_classdev	led_cdev;
 	struct led_trigger	led_trigger;
 	struct mutex		mutex;
 	enum uledtriggers_state	state;
 	enum uledtriggers_trig_state	trig_state;
 	unsigned long		trig_delay_on;
 	unsigned long		trig_delay_off;
-	int			brightness;
-	bool			new_data;
 };
 
 static struct miscdevice uledtriggers_misc;
@@ -149,7 +146,6 @@ static ssize_t uledtriggers_write(struct file *file, const char __user *buffer,
 	if (ret < 0)
 		goto out;
 
-	udev->new_data = true;
 	udev->state = ULEDTRIGGERS_STATE_REGISTERED;
 	ret = count;
 
