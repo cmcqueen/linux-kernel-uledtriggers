@@ -51,23 +51,35 @@ static char * trig_state_name(enum uledtriggers_trig_state trig_state)
 	return "unknown";
 }
 
-static void set_led_trigger(struct uledtriggers_device *data)
+static int set_led_trigger(struct uledtriggers_device *udev)
 {
-	dev_dbg(uledtriggers_misc.this_device, "LED trigger %s set to %s\n",
-			data->led_trigger.name,
-			trig_state_name(data->trig_state));
-	switch (data->trig_state) {
+	int retval = 0;
+	enum uledtriggers_trig_state trig_state;
+
+	retval = mutex_lock_interruptible(&udev->mutex);
+	if (retval)
+		return retval;
+
+	trig_state = udev->trig_state;
+	switch (trig_state) {
 	default:
 	case TRIG_STATE_OFF:
-		led_trigger_event(&data->led_trigger, LED_OFF);
+		led_trigger_event(&udev->led_trigger, LED_OFF);
 		break;
 	case TRIG_STATE_ON:
-		led_trigger_event(&data->led_trigger, LED_FULL);
+		led_trigger_event(&udev->led_trigger, LED_FULL);
 		break;
 	case TRIG_STATE_BLINK:
-		led_trigger_blink(&data->led_trigger, data->trig_delay_on, data->trig_delay_off);
+		led_trigger_blink(&udev->led_trigger, udev->trig_delay_on, udev->trig_delay_off);
 		break;
 	}
+	mutex_unlock(&udev->mutex);
+
+	dev_dbg(uledtriggers_misc.this_device, "LED trigger %s set to %s\n",
+		udev->led_trigger.name,
+		trig_state_name(trig_state));
+
+	return retval;
 }
 
 /*
@@ -77,12 +89,11 @@ static void set_led_trigger(struct uledtriggers_device *data)
 static int uledtriggers_trig_activate(struct led_classdev *led_cdev)
 {
 	struct led_trigger		*trig;
-	struct uledtriggers_device	*data;
+	struct uledtriggers_device	*udev;
 
 	trig = led_cdev->trigger;
-	data = container_of(trig, struct uledtriggers_device, led_trigger);
-	set_led_trigger(data);
-	return 0;
+	udev = container_of(trig, struct uledtriggers_device, led_trigger);
+	return set_led_trigger(udev);
 }
 
 static int uledtriggers_open(struct inode *inode, struct file *file)
@@ -102,58 +113,65 @@ static int uledtriggers_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static ssize_t uledtriggers_write(struct file *file, const char __user *buffer,
-			   size_t count, loff_t *ppos)
+static int dev_setup(struct uledtriggers_device *udev, const char __user *buffer)
 {
-	struct uledtriggers_device *udev = file->private_data;
 	const char *name;
-	int ret;
+	int retval;
 
-	if (count == 0)
-		return 0;
-
-	ret = mutex_lock_interruptible(&udev->mutex);
-	if (ret)
-		return ret;
+	retval = mutex_lock_interruptible(&udev->mutex);
+	if (retval)
+		return retval;
 
 	if (udev->state == ULEDTRIGGERS_STATE_REGISTERED) {
-		ret = -EBUSY;
-		goto out;
-	}
-
-	if (count != sizeof(struct uledtriggers_user_dev)) {
-		ret = -EINVAL;
+		retval = -EBUSY;
 		goto out;
 	}
 
 	if (copy_from_user(&udev->user_dev, buffer,
 			   sizeof(struct uledtriggers_user_dev))) {
-		ret = -EFAULT;
+		retval = -EFAULT;
 		goto out;
 	}
 
 	name = udev->user_dev.name;
 	if (!name[0] || !strcmp(name, ".") || !strcmp(name, "..") ||
 	    strchr(name, '/')) {
-		ret = -EINVAL;
+		retval = -EINVAL;
 		goto out;
 	}
 
 	udev->led_trigger.name = udev->user_dev.name;
 	udev->led_trigger.activate = uledtriggers_trig_activate;
-	ret = led_trigger_register(&udev->led_trigger);
-	if (ret < 0) {
+	retval = led_trigger_register(&udev->led_trigger);
+	if (retval < 0) {
 		udev->led_trigger.name = NULL;
 		goto out;
 	}
 
 	udev->state = ULEDTRIGGERS_STATE_REGISTERED;
-	ret = count;
 
 out:
 	mutex_unlock(&udev->mutex);
 
-	return ret;
+	return retval;
+}
+
+static ssize_t uledtriggers_write(struct file *file, const char __user *buffer,
+	size_t count, loff_t *ppos)
+{
+	struct uledtriggers_device *udev = file->private_data;
+	int retval;
+
+	if (count == 0)
+		return 0;
+	if (count != sizeof(struct uledtriggers_user_dev)) {
+		return -EINVAL;
+	}
+
+	retval = dev_setup(udev, buffer);
+	if (retval < 0)
+		return retval;
+	return count;
 }
 
 static long uledtriggers_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
@@ -178,6 +196,10 @@ static long uledtriggers_ioctl(struct file *file, unsigned int cmd, unsigned lon
 		return -EFAULT;
 
 	switch (cmd) {
+	case ULEDTRIGGERS_IOC_DEV_SETUP:
+		retval = dev_setup(udev, (const char __user *)arg);
+		break;
+
 	case ULEDTRIGGERS_IOC_OFF:
 		retval = mutex_lock_interruptible(&udev->mutex);
 		if (retval)

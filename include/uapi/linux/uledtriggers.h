@@ -18,15 +18,25 @@
 // See TRIG_NAME_MAX in linux/leds.h
 #define LED_TRIGGER_MAX_NAME_SIZE	50
 
+/*
+ * Struct for initial write to setup, or ioctl ULEDTREGGERS_IOC_DEV_SETUP.
+ */
 struct uledtriggers_user_dev {
 	char name[LED_TRIGGER_MAX_NAME_SIZE];
 };
 
+/*
+ * Struct for ioctl ULEDTRIGGERS_IOC_BLINK.
+ */
 struct uledtriggers_blink {
 	unsigned long delay_on;
 	unsigned long delay_off;
 };
 
+/*
+ * Struct for ioctl ULEDTRIGGERS_IOC_BLINK_ONESHOT.
+ * Note padding at the end due to alignment (for 64-bit kernels). Ensure it's set to 0.
+ */
 struct uledtriggers_blink_oneshot {
 	unsigned long delay_on;
 	unsigned long delay_off;
@@ -39,6 +49,14 @@ struct uledtriggers_blink_oneshot {
 
 #define ULEDTRIGGERS_IOC_MAGIC			'T'
 
+/*
+ * Initial setup.
+ * E.g.:
+ *	int retval;
+ *	struct uledtriggers_user_dev dev_setup = { "transmogrifier" };
+ *	retval = ioctl(fd, ULEDTRIGGERS_IOC_DEV_SETUP, &dev_setup);
+ */
+#define ULEDTRIGGERS_IOC_DEV_SETUP	_IOW(ULEDTRIGGERS_IOC_MAGIC, 0x01, struct uledtriggers_user_dev)
 
 /*
  * Turn the trigger off.
