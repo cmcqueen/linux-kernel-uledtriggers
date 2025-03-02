@@ -234,6 +234,8 @@ static long uledtriggers_ioctl(struct file *file, unsigned int cmd, unsigned lon
 			sizeof(blink_oneshot));
 		if (retval)
 			return retval;
+		if (blink_oneshot.__unused)
+			return -EINVAL;
 		retval = mutex_lock_interruptible(&udev->mutex);
 		if (retval)
 			return retval;

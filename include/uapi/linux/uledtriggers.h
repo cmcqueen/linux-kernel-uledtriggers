@@ -31,6 +31,7 @@ struct uledtriggers_blink_oneshot {
 	unsigned long delay_on;
 	unsigned long delay_off;
 	int invert;
+	int __unused;
 };
 
 
@@ -64,7 +65,7 @@ struct uledtriggers_blink_oneshot {
  *      blink.delay_off = 400;
  *	retval = ioctl(fd, ULEDTRIGGERS_IOC_BLINK, &blink);
  */
-#define ULEDTRIGGERS_IOC_BLINK		_IOW(ULEDTRIGGERS_IOC_MAGIC,  0x12, struct uledtriggers_blink)
+#define ULEDTRIGGERS_IOC_BLINK		_IOW(ULEDTRIGGERS_IOC_MAGIC, 0x12, struct uledtriggers_blink)
 
 /*
  * Set the LED trigger to blink once.
@@ -74,9 +75,10 @@ struct uledtriggers_blink_oneshot {
  *      blink_oneshot.delay_on = 100;
  *      blink_oneshot.delay_off = 400;
  *      blink_oneshot.invert = false;
+ *      blink_oneshot.__unused = 0;
  *	retval = ioctl(fd, ULEDTRIGGERS_IOC_BLINK_ONESHOT, &blink_oneshot);
  */
-#define ULEDTRIGGERS_IOC_BLINK_ONESHOT	_IOW(ULEDTRIGGERS_IOC_MAGIC,  0x13, struct uledtriggers_blink_oneshot)
+#define ULEDTRIGGERS_IOC_BLINK_ONESHOT	_IOW(ULEDTRIGGERS_IOC_MAGIC, 0x13, struct uledtriggers_blink_oneshot)
 
 
 #endif /* _UAPI__ULEDTRIGGERS_H_ */
