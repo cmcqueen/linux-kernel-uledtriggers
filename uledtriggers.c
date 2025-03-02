@@ -173,23 +173,39 @@ static long uledtriggers_ioctl(struct file *file, unsigned int cmd, unsigned lon
 	if (_IOC_DIR(cmd) & _IOC_READ)
 		retval = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
 	else if (_IOC_DIR(cmd) & _IOC_WRITE)
-		retval =  !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+		retval = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
 	if (retval)
 		return -EFAULT;
 
 	switch (cmd) {
 	case ULEDTRIGGERS_IOC_OFF:
+		retval = mutex_lock_interruptible(&udev->mutex);
+		if (retval)
+			return retval;
+		if (udev->state != ULEDTRIGGERS_STATE_REGISTERED) {
+			mutex_unlock(&udev->mutex);
+			return -EINVAL;
+		}
 		udev->trig_delay_on = 0u;
 		udev->trig_delay_off = 0u;
 		udev->trig_state = TRIG_STATE_OFF;
 		led_trigger_event(&udev->led_trigger, LED_OFF);
+		mutex_unlock(&udev->mutex);
 		break;
 
 	case ULEDTRIGGERS_IOC_ON:
+		retval = mutex_lock_interruptible(&udev->mutex);
+		if (retval)
+			return retval;
+		if (udev->state != ULEDTRIGGERS_STATE_REGISTERED) {
+			mutex_unlock(&udev->mutex);
+			return -EINVAL;
+		}
 		udev->trig_delay_on = 0u;
 		udev->trig_delay_off = 0u;
 		udev->trig_state = TRIG_STATE_ON;
 		led_trigger_event(&udev->led_trigger, LED_FULL);
+		mutex_unlock(&udev->mutex);
 		break;
 
 	case ULEDTRIGGERS_IOC_BLINK:
@@ -198,10 +214,18 @@ static long uledtriggers_ioctl(struct file *file, unsigned int cmd, unsigned lon
 			sizeof(blink));
 		if (retval)
 			return retval;
+		retval = mutex_lock_interruptible(&udev->mutex);
+		if (retval)
+			return retval;
+		if (udev->state != ULEDTRIGGERS_STATE_REGISTERED) {
+			mutex_unlock(&udev->mutex);
+			return -EINVAL;
+		}
 		udev->trig_delay_on = blink.delay_on;
 		udev->trig_delay_off = blink.delay_off;
 		udev->trig_state = TRIG_STATE_BLINK;
 		led_trigger_blink(&udev->led_trigger, blink.delay_on, blink.delay_off);
+		mutex_unlock(&udev->mutex);
 		break;
 
 	case ULEDTRIGGERS_IOC_BLINK_ONESHOT:
@@ -210,10 +234,18 @@ static long uledtriggers_ioctl(struct file *file, unsigned int cmd, unsigned lon
 			sizeof(blink_oneshot));
 		if (retval)
 			return retval;
+		retval = mutex_lock_interruptible(&udev->mutex);
+		if (retval)
+			return retval;
+		if (udev->state != ULEDTRIGGERS_STATE_REGISTERED) {
+			mutex_unlock(&udev->mutex);
+			return -EINVAL;
+		}
 		udev->trig_delay_on = 0u;
 		udev->trig_delay_off = 0u;
 		udev->trig_state = blink_oneshot.invert ? TRIG_STATE_ON : TRIG_STATE_OFF;
 		led_trigger_blink_oneshot(&udev->led_trigger, blink_oneshot.delay_on, blink_oneshot.delay_off, blink_oneshot.invert);
+		mutex_unlock(&udev->mutex);
 		break;
 
 	default:
