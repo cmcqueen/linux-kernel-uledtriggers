@@ -93,9 +93,6 @@ static int uledtriggers_open(struct inode *inode, struct file *file)
 	if (!udev)
 		return -ENOMEM;
 
-	udev->led_trigger.name = udev->user_dev.name;
-	udev->led_trigger.activate = uledtriggers_trig_activate;
-
 	mutex_init(&udev->mutex);
 	udev->state = ULEDTRIGGERS_STATE_UNKNOWN;
 
@@ -142,9 +139,13 @@ static ssize_t uledtriggers_write(struct file *file, const char __user *buffer,
 		goto out;
 	}
 
+	udev->led_trigger.name = udev->user_dev.name;
+	udev->led_trigger.activate = uledtriggers_trig_activate;
 	ret = led_trigger_register(&udev->led_trigger);
-	if (ret < 0)
+	if (ret < 0) {
+		udev->led_trigger.name = NULL;
 		goto out;
+	}
 
 	udev->state = ULEDTRIGGERS_STATE_REGISTERED;
 	ret = count;
