@@ -4,6 +4,7 @@
  *
  * Copyright (C) 2025 Craig McQueen <craig.mcqueen@innerrange.com>
  */
+#include <linux/ctype.h>
 #include <linux/fs.h>
 #include <linux/init.h>
 #include <linux/leds.h>
@@ -92,6 +93,26 @@ static int uledtriggers_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
+/*
+ * Name validation: Allow only alphanumeric, hyphen or underscore.
+ */
+static bool is_trigger_name_valid(const char * name)
+{
+	size_t i;
+
+	if (name[0] == '\0')
+		return false;
+
+	for (i = 0; i < TRIG_NAME_MAX; i++) {
+		if (name[i] == '\0')
+			break;
+		if (!isalnum(name[i]) && name[i] != '-' && name[i] != '_')
+			return false;
+	}
+	/* Length check. */
+	return (i < TRIG_NAME_MAX);
+}
+
 static int dev_setup(struct uledtriggers_device *udev, const char __user *buffer)
 {
 	const char *name;
@@ -113,7 +134,7 @@ static int dev_setup(struct uledtriggers_device *udev, const char __user *buffer
 	}
 
 	name = udev->user_dev.name;
-	if (!name[0] || strchr(name, ' ')) {
+	if (!is_trigger_name_valid(name)) {
 		retval = -EINVAL;
 		goto out;
 	}
