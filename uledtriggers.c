@@ -40,16 +40,6 @@ struct uledtriggers_device {
 
 static struct miscdevice uledtriggers_misc;
 
-static char * trig_state_name(enum uledtriggers_trig_state trig_state)
-{
-	switch (trig_state) {
-		case TRIG_STATE_EVENT:	return "event";
-		case TRIG_STATE_BLINK:	return "blink";
-		default:		return "unknown";
-	}
-	return "unknown";
-}
-
 static int set_led_trigger(struct uledtriggers_device *udev)
 {
 	int retval = 0;
@@ -70,10 +60,6 @@ static int set_led_trigger(struct uledtriggers_device *udev)
 		break;
 	}
 	mutex_unlock(&udev->mutex);
-
-	dev_dbg(uledtriggers_misc.this_device, "LED trigger %s set to %s\n",
-		udev->led_trigger.name,
-		trig_state_name(trig_state));
 
 	return retval;
 }
