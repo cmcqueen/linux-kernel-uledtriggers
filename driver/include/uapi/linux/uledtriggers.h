@@ -15,7 +15,7 @@
 #ifndef _UAPI__ULEDTRIGGERS_H_
 #define _UAPI__ULEDTRIGGERS_H_
 
-// See TRIG_NAME_MAX in linux/leds.h
+/* See TRIG_NAME_MAX in linux/leds.h */
 #define LED_TRIGGER_MAX_NAME_SIZE	50
 
 /*
@@ -23,6 +23,17 @@
  */
 struct uledtriggers_user_dev {
 	char name[LED_TRIGGER_MAX_NAME_SIZE];
+};
+
+/*
+ * Brightness levels for writes of int values, or for use with ULEDTRIGGERS_IOC_EVENT.
+ * These correspond to Linux kernel internal enum led_brightness in linux/leds.h.
+ */
+enum uledtriggers_brightness {
+	ULEDTRIGGERS_OFF		= 0,
+	ULEDTRIGGERS_ON			= 1,
+	ULEDTRIGGERS_HALF		= 127,
+	ULEDTRIGGERS_FULL		= 255,
 };
 
 /*
@@ -73,6 +84,16 @@ struct uledtriggers_blink_oneshot {
  *	retval = ioctl(fd, ULEDTRIGGERS_IOC_ON);
  */
 #define ULEDTRIGGERS_IOC_ON		_IO(ULEDTRIGGERS_IOC_MAGIC, 0x11)
+
+/*
+ * Set the LED trigger to a specified brightness.
+ * Refer to enum uledtriggers_brightness.
+ * E.g.:
+ *	int retval;
+ *	int brightness = ULEDTRIGGERS_FULL;
+ *	retval = ioctl(fd, ULEDTRIGGERS_IOC_EVENT, &brightness);
+ */
+#define ULEDTRIGGERS_IOC_EVENT		_IOW(ULEDTRIGGERS_IOC_MAGIC, 0x14, int)
 
 /*
  * Set the LED trigger to blink continuously.
