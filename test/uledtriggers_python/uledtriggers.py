@@ -5,7 +5,7 @@ import fcntl
 import struct
 import time
 
-ledtrigger_names = ('test0', 'test1')
+ledtrigger_names = ('utest0', 'utest1')
 
 CHAR_DEV_NAME = '/dev/uledtriggers'
 
