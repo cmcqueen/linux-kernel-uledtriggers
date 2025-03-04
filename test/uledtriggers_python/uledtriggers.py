@@ -5,6 +5,9 @@ import fcntl
 import struct
 import time
 
+# 3rd-party packages
+from ioctl_opt import IOC, IOC_WRITE
+
 ledtrigger_names = ('utest0', 'utest1')
 
 CHAR_DEV_NAME = '/dev/uledtriggers'
@@ -16,12 +19,12 @@ class EnumMissingUnknown():
 
 class IOCTL(EnumMissingUnknown, IntEnum):
     Unknown        = -1
-    ULEDTRIGGERS_IOC_DEV_SETUP      = 0x40327401
-    ULEDTRIGGERS_IOC_OFF            = 0x00007410
-    ULEDTRIGGERS_IOC_ON             = 0x00007411
-    ULEDTRIGGERS_IOC_EVENT          = 0x40047412
-    ULEDTRIGGERS_IOC_BLINK          = 0x40107420
-    ULEDTRIGGERS_IOC_BLINK_ONESHOT  = 0x40187421
+    ULEDTRIGGERS_IOC_DEV_SETUP      = IOC(IOC_WRITE, ord('t'), 0x01, 50)
+    ULEDTRIGGERS_IOC_OFF            = IOC(0, ord('t'), 0x10, 0)
+    ULEDTRIGGERS_IOC_ON             = IOC(0, ord('t'), 0x11, 0)
+    ULEDTRIGGERS_IOC_EVENT          = IOC(IOC_WRITE, ord('t'), 0x12, 4)
+    ULEDTRIGGERS_IOC_BLINK          = IOC(IOC_WRITE, ord('t'), 0x20, 16)
+    ULEDTRIGGERS_IOC_BLINK_ONESHOT  = IOC(IOC_WRITE, ord('t'), 0x21, 24)
 
 def uledtriggers_register(names):
     uledtriggers_f = []
