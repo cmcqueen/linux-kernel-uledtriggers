@@ -2,7 +2,7 @@
 /*
  * Userspace LED triggers driver
  *
- * Copyright (C) 2025 Craig McQueen <craig.mcqueen@innerrange.com>
+ * Copyright (C) 2025 Craig McQueen <craig@mcqueen.au>
  */
 #include <linux/ctype.h>
 #include <linux/fs.h>
@@ -380,6 +380,6 @@ static struct miscdevice uledtriggers_misc = {
 
 module_misc_device(uledtriggers_misc);
 
-MODULE_AUTHOR("Craig McQueen <craig.mcqueen@innerrange.com>");
+MODULE_AUTHOR("Craig McQueen <craig@mcqueen.au>");
 MODULE_DESCRIPTION("Userspace LED triggers driver");
 MODULE_LICENSE("GPL");
