@@ -369,7 +369,6 @@ static const struct file_operations uledtriggers_fops = {
 	.release	= uledtriggers_release,
 	.write		= uledtriggers_write,
 	.unlocked_ioctl	= uledtriggers_ioctl,
-	.llseek		= no_llseek,
 };
 
 static struct miscdevice uledtriggers_misc = {
