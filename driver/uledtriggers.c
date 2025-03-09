@@ -38,10 +38,21 @@ struct uledtriggers_device {
 
 static struct miscdevice uledtriggers_misc;
 
-static int set_led_trigger(struct uledtriggers_device *udev)
+/*
+ * When an LED is connected to the trigger, this 'activate' function runs and
+ * sets the initial state of the LED.
+ */
+static int uledtriggers_trig_activate(struct led_classdev *led_cdev)
 {
-	int retval = 0;
-	enum uledtriggers_trig_state trig_state;
+	struct led_trigger		*trig;
+	struct uledtriggers_device	*udev;
+	enum uledtriggers_trig_state	trig_state;
+	unsigned long			delay_on;
+	unsigned long			delay_off;
+	int				retval = 0;
+
+	trig = led_cdev->trigger;
+	udev = container_of(trig, struct uledtriggers_device, led_trigger);
 
 	retval = mutex_lock_interruptible(&udev->mutex);
 	if (retval)
@@ -51,29 +62,16 @@ static int set_led_trigger(struct uledtriggers_device *udev)
 	switch (trig_state) {
 	default:
 	case TRIG_STATE_EVENT:
-		led_trigger_event(&udev->led_trigger, udev->brightness);
+		led_set_brightness(led_cdev, udev->brightness);
 		break;
 	case TRIG_STATE_BLINK:
-		led_trigger_blink(&udev->led_trigger, udev->trig_delay_on, udev->trig_delay_off);
+		delay_on = udev->trig_delay_on;
+		delay_off = udev->trig_delay_off;
+		led_blink_set(led_cdev, &delay_on, &delay_off);
 		break;
 	}
 	mutex_unlock(&udev->mutex);
-
 	return retval;
-}
-
-/*
- * When an LED is connected to the trigger, this 'activate' function runs and
- * sets the initial state of the LED.
- */
-static int uledtriggers_trig_activate(struct led_classdev *led_cdev)
-{
-	struct led_trigger		*trig;
-	struct uledtriggers_device	*udev;
-
-	trig = led_cdev->trigger;
-	udev = container_of(trig, struct uledtriggers_device, led_trigger);
-	return set_led_trigger(udev);
 }
 
 static int uledtriggers_open(struct inode *inode, struct file *file)
