@@ -160,18 +160,16 @@ static int write_brightness(struct uledtriggers_device *udev, const char __user 
 	int retval;
 	int brightness;
 
+	if (copy_from_user(&brightness, buffer, sizeof(brightness))) {
+		return -EFAULT;
+	}
+
 	retval = mutex_lock_interruptible(&udev->mutex);
 	if (retval)
 		return retval;
 
 	if (udev->state != ULEDTRIGGERS_STATE_REGISTERED) {
-		retval = -EBUSY;
-		goto out;
-	}
-
-	if (copy_from_user(&brightness, buffer,
-			   sizeof(brightness))) {
-		retval = -EFAULT;
+		retval = -EINVAL;
 		goto out;
 	}
 
