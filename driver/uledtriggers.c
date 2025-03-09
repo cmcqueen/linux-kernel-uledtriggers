@@ -115,7 +115,6 @@ static bool is_trigger_name_valid(const char * name)
 
 static int dev_setup(struct uledtriggers_device *udev, const char __user *buffer)
 {
-	const char *name;
 	int retval;
 
 	retval = mutex_lock_interruptible(&udev->mutex);
@@ -133,8 +132,7 @@ static int dev_setup(struct uledtriggers_device *udev, const char __user *buffer
 		goto out;
 	}
 
-	name = udev->user_dev.name;
-	if (!is_trigger_name_valid(name)) {
+	if (!is_trigger_name_valid(udev->user_dev.name)) {
 		retval = -EINVAL;
 		goto out;
 	}
