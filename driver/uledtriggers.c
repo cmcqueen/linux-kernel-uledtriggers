@@ -156,17 +156,14 @@ out:
 }
 
 /*
- * Common code to set brightness that can be called from either the write
- * function or the ioctl ULEDTRIGGERS_IOC_EVENT.
+ * Common code to set brightness.
+ * It's called via write_user_buf_brightness() for the case of a brightness
+ * value in a userspace buffer (write function or ioctl ULEDTRIGGERS_IOC_EVENT).
+ * It's called directly for ioctl ULEDTRIGGERS_IOC_OFF and ULEDTRIGGERS_IOC_ON.
  */
-static int write_brightness(struct uledtriggers_device *udev, const char __user *buffer)
+static int write_brightness(struct uledtriggers_device *udev, int brightness)
 {
 	int retval;
-	int brightness;
-
-	if (copy_from_user(&brightness, buffer, sizeof(brightness))) {
-		return -EFAULT;
-	}
 
 	retval = mutex_lock_interruptible(&udev->mutex);
 	if (retval)
@@ -187,6 +184,22 @@ out:
 	mutex_unlock(&udev->mutex);
 
 	return retval;
+}
+
+/*
+ * Common code to set brightness from a value stored in a userspace buffer.
+ * This can be called from either the write function or the
+ * ioctl ULEDTRIGGERS_IOC_EVENT.
+ */
+static int write_user_buf_brightness(struct uledtriggers_device *udev, const char __user *buffer)
+{
+	int brightness;
+
+	if (copy_from_user(&brightness, buffer, sizeof(brightness))) {
+		return -EFAULT;
+	}
+
+	return write_brightness(udev, brightness);
 }
 
 static ssize_t uledtriggers_write(struct file *file, const char __user *buffer,
@@ -211,7 +224,7 @@ static ssize_t uledtriggers_write(struct file *file, const char __user *buffer,
 		if (count != sizeof(int)) {
 			return -EINVAL;
 		}
-		retval = write_brightness(udev, buffer);
+		retval = write_user_buf_brightness(udev, buffer);
 		if (retval < 0)
 			return retval;
 		return count;
@@ -233,39 +246,15 @@ static long uledtriggers_ioctl(struct file *file, unsigned int cmd, unsigned lon
 		break;
 
 	case ULEDTRIGGERS_IOC_OFF:
-		retval = mutex_lock_interruptible(&udev->mutex);
-		if (retval)
-			return retval;
-		if (udev->state != ULEDTRIGGERS_STATE_REGISTERED) {
-			mutex_unlock(&udev->mutex);
-			return -EINVAL;
-		}
-		udev->trig_delay_on = 0u;
-		udev->trig_delay_off = 0u;
-		udev->brightness = 0;
-		udev->trig_state = TRIG_STATE_EVENT;
-		led_trigger_event(&udev->led_trigger, LED_OFF);
-		mutex_unlock(&udev->mutex);
+		retval = write_brightness(udev, LED_OFF);
 		break;
 
 	case ULEDTRIGGERS_IOC_ON:
-		retval = mutex_lock_interruptible(&udev->mutex);
-		if (retval)
-			return retval;
-		if (udev->state != ULEDTRIGGERS_STATE_REGISTERED) {
-			mutex_unlock(&udev->mutex);
-			return -EINVAL;
-		}
-		udev->trig_delay_on = 0u;
-		udev->trig_delay_off = 0u;
-		udev->brightness = LED_FULL;
-		udev->trig_state = TRIG_STATE_EVENT;
-		led_trigger_event(&udev->led_trigger, LED_FULL);
-		mutex_unlock(&udev->mutex);
+		retval = write_brightness(udev, LED_FULL);
 		break;
 
 	case ULEDTRIGGERS_IOC_EVENT:
-		retval = write_brightness(udev, (const char __user *)arg);
+		retval = write_user_buf_brightness(udev, (const char __user *)arg);
 		break;
 
 	case ULEDTRIGGERS_IOC_BLINK:
