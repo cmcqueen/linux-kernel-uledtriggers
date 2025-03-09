@@ -140,12 +140,17 @@ static int dev_setup(struct uledtriggers_device *udev, const char __user *buffer
 	}
 
 	udev->led_trigger.name = udev->user_dev.name;
-	udev->led_trigger.activate = uledtriggers_trig_activate;
 	retval = led_trigger_register(&udev->led_trigger);
 	if (retval < 0) {
 		udev->led_trigger.name = NULL;
 		goto out;
 	}
+	/* To avoid mutex recursion, set _after_ led_trigger_register().
+	 * led_trigger_register() will immediately connect any LEDs that specify
+	 * this trigger as the default trigger, _and_ call the activate function
+	 * if set. But uledtriggers_trig_activate() will lock the mutex, but
+	 * we're already holding it. Kernel doesn't support mutex recursion. */
+	udev->led_trigger.activate = uledtriggers_trig_activate;
 
 	udev->state = ULEDTRIGGERS_STATE_REGISTERED;
 
