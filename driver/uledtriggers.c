@@ -227,20 +227,6 @@ static long uledtriggers_ioctl(struct file *file, unsigned int cmd, unsigned lon
 	struct uledtriggers_blink_oneshot blink_oneshot;
 	int retval = 0;
 
-	/*
-	 * the direction is a bitmask, and VERIFY_WRITE catches R/W
-	 * transfers. `Direction' is user-oriented, while
-	 * access_ok is kernel-oriented, so the concept of "read" and
-	 * "write" is reversed
-	 */
-	retval = 0;
-	if (_IOC_DIR(cmd) & _IOC_READ)
-		retval = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
-	else if (_IOC_DIR(cmd) & _IOC_WRITE)
-		retval = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
-	if (retval)
-		return -EFAULT;
-
 	switch (cmd) {
 	case ULEDTRIGGERS_IOC_DEV_SETUP:
 		retval = dev_setup(udev, (const char __user *)arg);
