@@ -155,6 +155,10 @@ out:
 	return retval;
 }
 
+/*
+ * Common code to set brightness that can be called from either the write
+ * function or the ioctl ULEDTRIGGERS_IOC_EVENT.
+ */
 static int write_brightness(struct uledtriggers_device *udev, const char __user *buffer)
 {
 	int retval;
@@ -221,7 +225,6 @@ static long uledtriggers_ioctl(struct file *file, unsigned int cmd, unsigned lon
 	struct uledtriggers_device *udev = file->private_data;
 	struct uledtriggers_blink blink;
 	struct uledtriggers_blink_oneshot blink_oneshot;
-	int brightness;
 	int retval = 0;
 
 	/*
@@ -276,24 +279,7 @@ static long uledtriggers_ioctl(struct file *file, unsigned int cmd, unsigned lon
 		break;
 
 	case ULEDTRIGGERS_IOC_EVENT:
-		retval = copy_from_user(&brightness,
-			(int __user *)arg,
-			sizeof(brightness));
-		if (retval)
-			return retval;
-		retval = mutex_lock_interruptible(&udev->mutex);
-		if (retval)
-			return retval;
-		if (udev->state != ULEDTRIGGERS_STATE_REGISTERED) {
-			mutex_unlock(&udev->mutex);
-			return -EINVAL;
-		}
-		udev->trig_delay_on = 0u;
-		udev->trig_delay_off = 0u;
-		udev->brightness = brightness;
-		udev->trig_state = TRIG_STATE_EVENT;
-		led_trigger_event(&udev->led_trigger, brightness);
-		mutex_unlock(&udev->mutex);
+		retval = write_brightness(udev, (const char __user *)arg);
 		break;
 
 	case ULEDTRIGGERS_IOC_BLINK:
