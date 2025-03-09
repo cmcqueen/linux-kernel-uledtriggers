@@ -111,6 +111,10 @@ static bool is_trigger_name_valid(const char * name)
 	return (i < TRIG_NAME_MAX);
 }
 
+/*
+ * Common setup code that can be called from either the write function or the
+ * ioctl ULEDTRIGGERS_IOC_DEV_SETUP.
+ */
 static int dev_setup(struct uledtriggers_device *udev, const char __user *buffer)
 {
 	int retval;
