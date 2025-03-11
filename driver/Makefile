@@ -1,7 +1,7 @@
 ifneq ($(KERNELRELEASE),)
 
 # kbuild part of makefile
-obj-m  := uledtriggers.o
+obj-m  := ledtrig-user.o
 
 ccflags-y := -I$(src)/include
 
