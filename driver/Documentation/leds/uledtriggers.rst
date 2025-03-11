@@ -14,7 +14,7 @@ To create a new LED trigger, open /dev/uledtriggers and write a
 uledtriggers_user_dev structure to it (found in kernel public header file
 linux/uledtriggers.h)::
 
-    #define LED_TRIGGER_MAX_NAME_SIZE 50
+    #define LED_TRIGGER_MAX_NAME_SIZE 64
 
     struct uledtriggers_user_dev {
 	char name[LED_TRIGGER_MAX_NAME_SIZE];

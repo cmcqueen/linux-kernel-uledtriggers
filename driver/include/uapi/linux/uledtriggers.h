@@ -16,7 +16,7 @@
 #define _UAPI__ULEDTRIGGERS_H_
 
 /* See TRIG_NAME_MAX in linux/leds.h */
-#define LED_TRIGGER_MAX_NAME_SIZE	50
+#define LED_TRIGGER_MAX_NAME_SIZE	64
 
 /*
  * Struct for initial write to setup, or ioctl ULEDTREGGERS_IOC_DEV_SETUP.

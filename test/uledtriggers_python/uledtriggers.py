@@ -19,7 +19,7 @@ class EnumMissingUnknown():
 
 class IOCTL(EnumMissingUnknown, IntEnum):
     Unknown        = -1
-    ULEDTRIGGERS_IOC_DEV_SETUP      = IOC(IOC_WRITE, ord('t'), 0x01, 50)
+    ULEDTRIGGERS_IOC_DEV_SETUP      = IOC(IOC_WRITE, ord('t'), 0x01, 64)
     ULEDTRIGGERS_IOC_OFF            = IOC(0, ord('t'), 0x10, 0)
     ULEDTRIGGERS_IOC_ON             = IOC(0, ord('t'), 0x11, 0)
     ULEDTRIGGERS_IOC_EVENT          = IOC(IOC_WRITE, ord('t'), 0x12, 4)
@@ -30,7 +30,7 @@ def uledtriggers_register(names):
     uledtriggers_f = []
     for name in names:
         f = open(CHAR_DEV_NAME, 'r+b', buffering=0)
-        name_struct = struct.pack('@50s', name.encode('utf-8'))
+        name_struct = struct.pack('@64s', name.encode('utf-8'))
         if False:
             f.write(name_struct)
         else:
