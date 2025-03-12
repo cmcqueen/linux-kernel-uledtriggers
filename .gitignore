@@ -1,0 +1,10 @@
+
+*.o
+*.cmd
+*.symvers
+*.mod
+*.mod.c
+*.ko
+modules.order
+test/uledtriggers_c/uledtriggers
+
