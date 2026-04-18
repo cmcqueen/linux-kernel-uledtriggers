@@ -10,6 +10,7 @@
 #include <linux/leds.h>
 #include <linux/miscdevice.h>
 #include <linux/module.h>
+#include <linux/slab.h>
 
 #include <uapi/linux/uledtriggers.h>
 
@@ -94,7 +95,7 @@ static int uledtriggers_open(struct inode *inode, struct file *file)
 /*
  * Name validation: Allow only alphanumeric, hyphen or underscore.
  */
-static bool is_trigger_name_valid(const char * name)
+static bool is_trigger_name_valid(const char *name)
 {
 	size_t i;
 
@@ -149,7 +150,8 @@ static int dev_setup(struct uledtriggers_device *udev, const char __user *buffer
 	 * led_trigger_register() will immediately connect any LEDs that specify
 	 * this trigger as the default trigger, _and_ call the activate function
 	 * if set. But uledtriggers_trig_activate() will lock the mutex, but
-	 * we're already holding it. Kernel doesn't support mutex recursion. */
+	 * we're already holding it. Kernel doesn't support mutex recursion.
+	 */
 	udev->led_trigger.activate = uledtriggers_trig_activate;
 
 	udev->state = ULEDTRIGGERS_STATE_REGISTERED;
@@ -200,9 +202,8 @@ static int write_user_buf_brightness(struct uledtriggers_device *udev, const cha
 {
 	int brightness;
 
-	if (copy_from_user(&brightness, buffer, sizeof(brightness))) {
+	if (copy_from_user(&brightness, buffer, sizeof(brightness)))
 		return -EFAULT;
-	}
 
 	return write_brightness(udev, brightness);
 }
@@ -218,17 +219,15 @@ static ssize_t uledtriggers_write(struct file *file, const char __user *buffer,
 
 	switch (udev->state) {
 	case ULEDTRIGGERS_STATE_UNKNOWN:
-		if (count != sizeof(struct uledtriggers_user_dev)) {
+		if (count != sizeof(struct uledtriggers_user_dev))
 			return -EINVAL;
-		}
 		retval = dev_setup(udev, buffer);
 		if (retval < 0)
 			return retval;
 		return count;
 	case ULEDTRIGGERS_STATE_REGISTERED:
-		if (count != sizeof(int)) {
+		if (count != sizeof(int))
 			return -EINVAL;
-		}
 		retval = write_user_buf_brightness(udev, buffer);
 		if (retval < 0)
 			return retval;
@@ -302,7 +301,8 @@ static long uledtriggers_ioctl(struct file *file, unsigned int cmd, unsigned lon
 		udev->trig_delay_off = 0u;
 		udev->brightness = blink_oneshot.invert ? LED_FULL : LED_OFF;
 		udev->trig_state = TRIG_STATE_EVENT;
-		led_trigger_blink_oneshot(&udev->led_trigger, blink_oneshot.delay_on, blink_oneshot.delay_off, blink_oneshot.invert);
+		led_trigger_blink_oneshot(&udev->led_trigger,
+			blink_oneshot.delay_on, blink_oneshot.delay_off, blink_oneshot.invert);
 		mutex_unlock(&udev->mutex);
 		break;
 
