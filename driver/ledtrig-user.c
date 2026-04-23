@@ -63,6 +63,9 @@ static int uledtriggers_trig_activate(struct led_classdev *led_cdev)
 	switch (trig_state) {
 	default:
 	case TRIG_STATE_EVENT:
+		if (udev->brightness)
+			/* Ensure any active blinking is stopped first. */
+			led_set_brightness(led_cdev, LED_OFF);
 		led_set_brightness(led_cdev, udev->brightness);
 		break;
 	case TRIG_STATE_BLINK:
