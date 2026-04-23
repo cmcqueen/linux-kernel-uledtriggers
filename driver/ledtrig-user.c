@@ -184,6 +184,9 @@ static int write_brightness(struct uledtriggers_device *udev, int brightness)
 		goto out;
 	}
 
+	if (brightness && udev->trig_state == TRIG_STATE_BLINK)
+		/* Ensure any active blinking is stopped first. */
+		led_trigger_event(&udev->led_trigger, LED_OFF);
 	udev->trig_delay_on = 0u;
 	udev->trig_delay_off = 0u;
 	udev->brightness = brightness;
