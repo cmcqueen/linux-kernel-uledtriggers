@@ -1,20 +1,17 @@
-ifneq ($(KERNELRELEASE),)
 
-# kbuild part of makefile
-obj-m  := ledtrig-user.o
-
+obj-m := ledtrig-user.o
 ccflags-y := -I$(src)/include
 
-else
+KERNEL_SRC ?= /lib/modules/`uname -r`/build
+SRC := $(shell pwd)
 
-# normal makefile
-KDIR ?= /lib/modules/`uname -r`/build
+all:
+	$(MAKE) -C $(KERNEL_SRC) M=$(SRC)
 
-default:
-	$(MAKE) -C $(KDIR) M=$$PWD
 modules_install:
-	$(MAKE) INSTALL_MOD_DIR=kernel/drivers/leds -C $(KDIR) M=$$PWD modules_install
-clean:
-	$(MAKE) -C $(KDIR) M=$$PWD clean
+	$(MAKE) -C $(KERNEL_SRC) M=$(SRC) modules_install
 
-endif
+clean:
+	rm -f *.o *~ core .depend .*.cmd *.ko *.mod *.mod.c
+	rm -f Module.markers Module.symvers modules.order
+	rm -rf .tmp_versions Modules.symvers
