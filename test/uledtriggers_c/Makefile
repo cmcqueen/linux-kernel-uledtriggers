@@ -3,7 +3,7 @@
 
 CFLAGS = -Wall -Wextra -g -I../../driver/include/uapi
 
-all: uledtriggers
+all: uledtriggers uledtriggers_blink_steady
 %: %.c
 	$(CC) $(CFLAGS) -o $@ $^
 

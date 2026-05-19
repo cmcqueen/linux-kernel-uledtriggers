@@ -7,4 +7,5 @@
 *.ko
 modules.order
 test/uledtriggers_c/uledtriggers
+test/uledtriggers_c/uledtriggers_blink_steady
 
