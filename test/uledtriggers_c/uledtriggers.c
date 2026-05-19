@@ -2,8 +2,7 @@
 /*
  * uledtriggers.c
  *
- * This program creates a new userspace LED trigger and monitors it. A
- * timestamp and brightness value is printed each time the brightness changes.
+ * This program creates a userspace LED trigger, and tests various operations on it.
  *
  * Usage: uledtriggers <trigger-name>
  *
@@ -22,7 +21,7 @@
 
 int main(int argc, char const *argv[])
 {
-	struct uledtriggers_user_dev uledtriggers_dev;
+	struct uledtriggers_user_dev uledtriggers_dev = {};
 	int fd, ret;
 	int brightness;
 	struct uledtriggers_blink blink = { .delay_on = 200, .delay_off = 200 };
@@ -41,7 +40,7 @@ int main(int argc, char const *argv[])
 		return 1;
 	}
 
-	#if 0
+#if 0
 	// Setup by write.
 	ret = write(fd, &uledtriggers_dev, sizeof(uledtriggers_dev));
 #else
@@ -49,7 +48,7 @@ int main(int argc, char const *argv[])
 	ret = ioctl(fd, ULEDTRIGGERS_IOC_DEV_SETUP, &uledtriggers_dev);
 #endif
 	if (ret == -1) {
-		perror("Failed to write to /dev/uledtriggers");
+		perror("Failed to set up /dev/uledtriggers");
 		close(fd);
 		return 1;
 	}
